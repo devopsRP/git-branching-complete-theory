@@ -1,621 +1,343 @@
-## **Git Merge + Git Rebase + Conflict + Conflict Resolution** 
+# The Story of Merge vs Rebase
 
-This explanation will cover:
+## Understanding Branch Integration From Zero to Expert
+
+Munna Bhaiya joined a team project.
+
+Manager said:
+
+> “Before opening PR, rebase your branch.”
+
+Munna Bhaiya froze.
+
+Inside his mind:
 
 ```text
-1. What is Merge
-2. Why Merge
-3. How Merge Works
-4. What is Rebase
-5. Why Rebase
-6. How Rebase Works
-7. Merge vs Rebase
-8. Conflict
-9. Conflict Resolution
-10. Best Practices
+Merge?
+Rebase?
+Aren't both combining code?
 ```
+
+Yes.
+
+But also—
+
+No.
+
+This chapter explains the complete story.
 
 ---
 
-# STORY SETUP
+# Scene 1 — Why Merge/Rebase Even Exist?
 
-Company:
+Project starts.
 
-```text
-Mirzapur Software Pvt Ltd
-```
-
-Project:
-
-```text
-Insurance Application
-```
-
-Team:
-
-```text
-Munna Bhaiya → Backend Developer
-Guddu Pandit → Frontend Developer
-Bablu → QA
-Ravi → DevOps
-Kaleen Bhaiya → Production Owner
-```
-
-Branches:
-
-```text
-main → Production
-
-dev → Development
-```
-
----
-
-# DAY 1 — Current Situation
-
-Production code:
+Main branch:
 
 ```text
 main
 
 A
+↓
+B
+↓
+C
 ```
 
-A = Initial Code
-
----
-
-Ravi creates DEV.
+Munna Bhaiya creates feature branch:
 
 ```bash
-git checkout main
-
-git checkout -b dev
+git checkout -b login
 ```
 
-Now:
-
-```text
-main
-│
-dev
-```
-
----
-
-Munna creates feature.
-
-```bash
-git checkout dev
-
-git checkout -b feature/snap
-```
-
-Guddu creates feature.
-
-```bash
-git checkout dev
-
-git checkout -b feature/payment
-```
-
-Now:
+History becomes:
 
 ```text
 main
 
-dev
-├── feature/snap
-└── feature/payment
+A
+↓
+B
+↓
+C
+
+
+login
+
+A
+↓
+B
+↓
+C
 ```
 
-Everything looks good.
+Now branches become independent.
 
 ---
 
-# PART 1 — GIT MERGE
+# Scene 2 — Parallel Development Begins
 
----
-
-# What is Merge?
-
-Merge means:
-
-> Combine two branch histories and preserve everything.
-
-Think:
+Munna Bhaiya works:
 
 ```text
-Two roads become one
+login
+
+A
+↓
+B
+↓
+C
+↓
+D
+↓
+E
+```
+
+Meanwhile Guddu pushes:
+
+```text
+main
+
+A
+↓
+B
+↓
+C
+↓
+F
+↓
+G
+```
+
+Now situation:
+
+```text
+           D
+          /
+A—B—C
+      \
+       F—G
+```
+
+Question:
+
+How do we combine?
+
+Answer:
+
+```text
+Merge
+or
+Rebase
+```
+
+---
+
+# Part 1 — Merge
+
+---
+
+# Scene 3 — What is Merge?
+
+Munna Bhaiya asks:
+
+> “What does merge mean?”
+
+Definition:
+
+> Merge combines histories while preserving branch structure.
+
+Command:
+
+```bash
+git merge login
+```
+
+Visualization:
+
+Before:
+
+```text
+main
+
+A—B—C—F—G
+
+login
+
+A—B—C—D—E
+```
+
+After:
+
+```text
+A—B—C—F—G
+       \   \
+        D—E—M
+```
+
+`M`
+
+=
+
+Merge Commit
+
+---
+
+# Scene 4 — Merge Story
+
+Git says:
+
+> “I will combine both histories.”
+
+It creates:
+
+```text
+New Commit
+```
+
+That commit remembers:
+
+```text
+Parent 1 → main
+Parent 2 → login
+```
+
+Meaning:
+
+```text
+Nothing rewritten
+```
+
+---
+
+# Scene 5 — Types of Merge
+
+---
+
+## Fast Forward Merge
+
+Condition:
+
+No divergence.
+
+Before:
+
+```text
+A—B—C
+     \
+      D
 ```
 
 Command:
 
 ```bash
-git merge branch-name
+git merge login
 ```
-
----
-
-# MERGE STORY
-
-Munna works.
-
-Commits:
-
-```text
-feature/snap
-
-A → M1 → M2
-```
-
-Guddu works.
-
-Commits:
-
-```text
-dev
-
-A → D1 → D2
-```
-
-Current:
-
-```text
-dev
-
-A → D1 → D2
-
-
-feature/snap
-
-A → M1 → M2
-```
-
-Now Munna wants latest DEV.
-
-Run:
-
-```bash
-git checkout feature/snap
-
-git merge dev
-```
-
----
-
-Git says:
-
-> Okay Munna…
-> I will combine both histories.
 
 Result:
 
 ```text
-dev
-
-A → D1 → D2
-
-          \
-feature
-
-A → M1 → M2 → Merge
+A—B—C—D
 ```
 
-Notice:
+No merge commit.
 
-Git created:
+History stays clean.
+
+---
+
+## Three-Way Merge
+
+Both changed.
+
+Before:
 
 ```text
-Merge Commit
+A—B—C
+ \   \
+  D   E
 ```
 
----
-
-Meaning:
+After:
 
 ```text
-Both histories remain.
+A—B—C
+ \   \
+  D   E
+   \ /
+    M
 ```
+
+Merge commit created.
 
 ---
 
-Think like:
+# Scene 6 — Internal Merge Algorithm
 
-Munna:
-
-> Hum apna rasta nahi chodenge.
-
-Guddu:
-
-> Hum bhi nahi.
-
-Git:
-
-> Theek hai dono rakh deta hoon.
-
-````
-
----
-
-# Real Command
-
-Switch:
-
-```bash
-git checkout feature/snap
-````
-
-Merge:
-
-```bash
-git merge dev
-```
-
-Push:
-
-```bash
-git push
-```
-
----
-
-# Merge Advantages
-
-### Keeps history
+Git finds:
 
 ```text
-Who did what
-```
-
----
-
-### Safe
-
-Nothing rewritten.
-
----
-
-### Best for shared branches
-
-```text
-dev
-main
-release
-```
-
----
-
-# Merge Disadvantage
-
-History becomes:
-
-```text
-messy
+Common Ancestor
 ```
 
 Example:
 
 ```text
 A
- \
-  B
- / \
-C   M
 ```
 
----
-
-# PART 2 — GIT REBASE
-
----
-
-# What is Rebase?
-
-Rebase means:
-
-> Move your commits and replay them on latest branch.
-
-Command:
-
-```bash
-git rebase branch-name
-```
-
----
-
-# REBASE STORY
-
-Current:
+Compare:
 
 ```text
-dev
-
-A → D1 → D2
-
-
-feature
-
-A → M1 → M2
+A→main
+A→feature
 ```
 
-Munna says:
+Combine changes.
 
-> Mujhe latest DEV chahiye but clean history bhi chahiye.
-
-Run:
-
-```bash
-git checkout feature/snap
-
-git rebase dev
-```
-
-Git says:
-
-> Munna…
->
-> Main tumhara kaam uthata hoon…
->
-> DEV ke upar dubara laga deta hoon.
+Produce result.
 
 ---
 
-Result:
+# Scene 7 — Merge Conflict
 
-Before:
+Munna Bhaiya edits:
 
-```text
-A → M1 → M2
+```js
+name="Munna"
 ```
 
-After:
+Guddu edits:
 
-```text
-A → D1 → D2 → M1 → M2
-```
-
-Final:
-
-```text
-dev
-
-A → D1 → D2
-
-
-feature
-
-A → D1 → D2 → M1 → M2
-```
-
-Notice:
-
-```text
-No Merge Commit
-```
-
-Clean history.
-
----
-
-Think:
-
-Guddu:
-
-> Munna pehle humara code lo.
-
-Munna:
-
-> Theek hai hum upar se fir kaam karenge.
-
-````
-
----
-
-# Rebase Advantages
-
-### Clean history
-
-```text
-Linear commits
-````
-
----
-
-### Easy debugging
-
----
-
-### Better for feature branches
-
----
-
-# Rebase Disadvantage
-
-History rewritten.
-
-Danger if already pushed.
-
----
-
-# PART 3 — MERGE vs REBASE
-
----
-
-## Merge
-
-```text
-Combine
-
-History kept
-
-Extra commit YES
-
-Safe YES
-```
-
-Diagram:
-
-```text
-A---B---C
- \     /
-  D---M
-```
-
----
-
-## Rebase
-
-```text
-Move commits
-
-History rewritten
-
-Extra commit NO
-
-Clean YES
-```
-
-Diagram:
-
-```text
-A---B---C---D
-```
-
----
-
-# PART 4 — CONFLICT
-
-Now story becomes interesting.
-
----
-
-Munna opens:
-
-```java
-age=18;
-```
-
-Commit.
-
----
-
-Guddu edits SAME line:
-
-```java
-age=21;
-```
-
-Current:
-
-```text
-feature/snap
-
-age=18
-
-
-dev
-
-age=21
+```js
+name="Guddu"
 ```
 
 Merge:
 
-```bash
-git merge dev
-```
-
-Git:
-
 ```text
-STOP
+Conflict
 ```
 
-Error:
+Git cannot choose.
 
-```text
-CONFLICT
-```
-
----
-
-# Why Conflict Happens?
-
-Git sees:
-
-```text
-Same file
-
-Same line
-
-Different changes
-```
-
-Git cannot decide.
-
----
-
-Git shows:
+File becomes:
 
 ```text
 <<<<<<< HEAD
-
-age=18;
-
+Munna
 =======
-
-age=21;
-
+Guddu
 >>>>>>>
 ```
 
-Meaning:
+Developer resolves.
 
-```text
-HEAD
-↓
-
-Current Branch
-
-
-====
-
-Incoming Branch
-```
-
----
-
-Munna:
-
-> Hum 18 rakhte.
-
-Guddu:
-
-> Hum 21.
-
-Bablu:
-
-> Business requirement 21.
-
-Final:
-
-```java
-age=21;
-```
-
-Save.
-
----
-
-Stage:
+Then:
 
 ```bash
 git add .
-```
 
-Commit:
-
-```bash
 git commit
 ```
 
@@ -623,12 +345,194 @@ Done.
 
 ---
 
-# Conflict During Rebase
+# Scene 8 — Advantages of Merge
 
-Run:
+```text
+History preserved
+Safe
+No rewriting
+Easy
+Good for teams
+```
+
+---
+
+# Scene 9 — Disadvantages of Merge
+
+```text
+Extra commits
+Complex history
+Graph becomes messy
+```
+
+Example:
+
+```text
+A
+↓
+B
+↓
+M
+↓
+N
+↓
+M
+```
+
+---
+
+# Part 2 — Rebase
+
+---
+
+# Scene 10 — What is Rebase?
+
+Munna Bhaiya asks:
+
+> “Then why rebase?”
+
+Definition:
+
+> Rebase moves branch commits onto another base and rewrites history.
+
+Command:
 
 ```bash
-git rebase dev
+git rebase main
+```
+
+Git says:
+
+> “I'll replay your work as if you started later.”
+
+---
+
+# Scene 11 — Rebase Story
+
+Before:
+
+```text
+main
+
+A—B—C—F—G
+
+
+login
+
+A—B—C—D—E
+```
+
+Git removes:
+
+```text
+D
+E
+```
+
+Temporarily.
+
+Moves branch.
+
+Reapplies.
+
+Result:
+
+```text
+A—B—C—F—G—D'—E'
+```
+
+Notice:
+
+```text
+D ≠ D'
+E ≠ E'
+```
+
+Commits recreated.
+
+---
+
+# Scene 12 — What Rebase Actually Does
+
+Internally:
+
+Step 1
+
+Find common ancestor.
+
+```text
+C
+```
+
+Step 2
+
+Extract commits.
+
+```text
+D
+E
+```
+
+Step 3
+
+Move branch.
+
+```text
+F
+G
+```
+
+Step 4
+
+Replay.
+
+```text
+D'
+E'
+```
+
+History rewritten.
+
+---
+
+# Scene 13 — Why Rebase Feels Magical
+
+Before:
+
+```text
+Messy
+```
+
+```text
+A
+ \
+  B
+   \
+    C
+```
+
+After:
+
+```text
+Straight Line
+```
+
+```text
+A—B—C
+```
+
+Looks cleaner.
+
+---
+
+# Scene 14 — Rebase Conflict
+
+Conflicts happen during replay.
+
+Example:
+
+```bash
+git rebase main
 ```
 
 Conflict.
@@ -641,15 +545,11 @@ Continue:
 git rebase --continue
 ```
 
----
-
 Abort:
 
 ```bash
 git rebase --abort
 ```
-
----
 
 Skip:
 
@@ -659,120 +559,230 @@ git rebase --skip
 
 ---
 
-# Real DevOps Example
+# Scene 15 — Interactive Rebase (Power Tool)
 
-Terraform:
+Munna Bhaiya discovers:
 
-Munna:
-
-```tf
-vm_size="B2"
+```bash
+git rebase -i HEAD~5
 ```
 
-Guddu:
+Git opens:
 
-```tf
-vm_size="D4"
+```text
+pick
+pick
+pick
 ```
+
+Actions:
+
+---
+
+## Reorder
+
+```text
+Move commits
+```
+
+---
+
+## Squash
+
+Combine.
+
+Before:
+
+```text
+A
+B
+C
+```
+
+After:
+
+```text
+ABC
+```
+
+---
+
+## Drop
+
+Delete commit.
+
+---
+
+## Edit
+
+Modify commit.
+
+---
+
+## Rename
+
+Change message.
+
+---
+
+Interactive rebase edits history.
+
+---
+
+# Scene 16 — Merge vs Rebase Philosophy
+
+Merge says:
+
+> “History happened like this.”
+
+Rebase says:
+
+> “History should look clean.”
+
+---
+
+# Scene 17 — Visual Comparison
+
+Merge:
+
+```text
+A—B—C
+ \   \
+  D   E
+   \ /
+    M
+```
+
+Preserves branches.
+
+---
+
+Rebase:
+
+```text
+A—B—C—D'—E'
+```
+
+Linear history.
+
+---
+
+# Scene 18 — Golden Rule of Rebase
+
+Manager tells Munna Bhaiya:
+
+> Never rebase public shared branches.
+
+Why?
+
+Because rebase rewrites history.
+
+Bad:
+
+```bash
+git rebase main
+git push
+```
+
+After shared.
+
+Good:
+
+```text
+Local Feature Branch
+```
+
+Safe.
+
+---
+
+# Scene 19 — Merge + Rebase Together
+
+Modern workflow:
+
+Feature branch:
+
+```bash
+git rebase main
+```
+
+Then PR:
+
+```text
+Squash Merge
+```
+
+Clean history.
+
+---
+
+# Scene 20 — Real Team Workflow
+
+Daily:
+
+```bash
+git checkout feature
+
+git fetch
+
+git rebase origin/main
+
+git push --force-with-lease
+```
+
+PR.
 
 Merge.
 
-Conflict.
-
-Resolve.
+Done.
 
 ---
 
-# Best Practices
+# Scene 21 — Command Cheat Sheet
 
-### Use Merge for:
-
-```text
-main
-dev
-release
-```
-
----
-
-### Use Rebase for:
-
-```text
-feature/*
-```
-
----
-
-### Pull before work
+Merge:
 
 ```bash
-git pull
+git merge branch
 ```
 
----
-
-### Small commits
+Abort:
 
 ```bash
-git commit -m "updated terraform"
+git merge --abort
 ```
 
 ---
 
-### PR before merge
+Rebase:
 
-```text
-Push
-↓
+```bash
+git rebase branch
+```
 
-PR
-↓
+Continue:
 
-Review
-↓
+```bash
+git rebase --continue
+```
 
-Merge
+Abort:
+
+```bash
+git rebase --abort
+```
+
+Interactive:
+
+```bash
+git rebase -i HEAD~5
 ```
 
 ---
 
-# Final Memory Trick
+# Final Lesson from Munna Bhaiya
 
-```text
-Merge
-↓
-
-"Sabko saath leke chalo"
-
-
-Rebase
-↓
-
-"Nayi line me dubara chalo"
-
-
-Conflict
-↓
-
-"Decision lo"
-```
-
-Flow:
-
-```text
-Feature
-↓
-
-Rebase
-↓
-
-PR
-↓
-
-Merge
-↓
-
-Production
-```
-
-Now Merge + Rebase + Conflict should feel natural.
+> “Merge respects history.
+> Rebase rewrites history.
+> Both combine code—
+> but they tell different stories of how the code came to exist.”
